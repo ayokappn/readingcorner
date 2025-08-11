@@ -1,5 +1,5 @@
 // Nom de cache (change la version pour mettre à jour)
-const CACHE_NAME = "mini-library-cache-v1";
+const CACHE_NAME = "mini-library-cache-v2"; // <- passe à v2 (ou v3, etc.)
 
 // Fichiers à mettre en cache pour fonctionner hors-ligne
 const ASSETS = [
