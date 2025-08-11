@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <title>Ma Bibliothèque</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-bar">
+    <h1>Ma bibliothèque</h1>
+    <button id="addBookBtn" class="icon-btn" aria-label="Ajouter un livre" title="Ajouter un livre">+</button>
+  </header>
+
+  <main>
+    <ul id="bookList" class="book-list" aria-live="polite"></ul>
+    <p id="emptyState" class="empty-state">Aucun livre pour le moment. Appuie sur “+” pour en ajouter un.</p>
+  </main>
+
+  <!-- Feuille de formulaire -->
+  <div id="sheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet__header">
+      <h2 id="sheetTitle">Ajouter un livre</h2>
+      <button id="closeSheetBtn" class="icon-btn" aria-label="Fermer">×</button>
+    </div>
+
+    <form id="bookForm" novalidate>
+      <input type="hidden" id="bookId" />
+      <div class="field">
+        <label for="title">Titre <span class="req">*</span></label>
+        <input id="title" name="title" type="text" required maxlength="200" placeholder="Ex : L’Étranger" />
+        <p class="field-hint">Obligatoire</p>
+      </div>
+
+      <div class="field">
+        <label for="author">Auteur</label>
+        <input id="author" name="author" type="text" maxlength="200" placeholder="Ex : Albert Camus" />
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="pubDate">Date de parution</label>
+          <input id="pubDate" name="pubDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="pages">Nombre de pages</label>
+          <input id="pages" name="pages" inputmode="numeric" pattern="[0-9]*" type="number" min="1" placeholder="Ex : 192" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="startDate">Début de lecture</label>
+          <input id="startDate" name="startDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="endDate">Fin de lecture</label>
+          <input id="endDate" name="endDate" type="date" />
+        </div>
+      </div>
+
+      <section class="annotations">
+        <div class="annotations__header">
+          <h3>Annotations</h3>
+          <button id="addNoteBtn" type="button" class="btn small" aria-label="Ajouter une annotation">+ Annotation</button>
+        </div>
+        <div id="notesContainer" class="notes-container" aria-live="polite"></div>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="btn flat" id="deleteBookBtn" hidden>Supprimer</button>
+        <div class="spacer"></div>
+        <button type="button" class="btn" id="cancelBtn">Annuler</button>
+        <button type="submit" class="btn primary" id="saveBtn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+
+  <template id="bookItemTpl">
+    <li class="book-card">
+      <div class="book-card__main">
+        <div class="book-card__title-row">
+          <h3 class="book-title"></h3>
+          <button class="icon-btn edit-btn" title="Modifier" aria-label="Modifier">✎</button>
+        </div>
+        <p class="book-meta author"></p>
+        <p class="book-meta details"></p>
+        <div class="chip-row dates"></div>
+      </div>
+      <details class="notes-block">
+        <summary>Annotations (<span class="count">0</span>)</summary>
+        <ul class="note-list"></ul>
+      </details>
+    </li>
+  </template>
+
+  <template id="noteRowTpl">
+    <div class="note-row">
+      <div class="grid-2">
+        <div class="field">
+          <label>Page</label>
+          <input class="note-page" type="number" min="1" inputmode="numeric" placeholder="p." />
+        </div>
+        <div class="field">
+          <label>Type</label>
+          <select class="note-type">
+            <option value="annotation">Annotation</option>
+            <option value="citation">Citation</option>
+            <option value="commentaire">Commentaire</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Texte</label>
+        <textarea class="note-text" rows="3" placeholder="Votre note, citation ou commentaire…"></textarea>
+      </div>
+      <div class="note-row__actions">
+        <button type="button" class="btn flat remove-note">Supprimer</button>
+      </div>
+      <hr />
+    </div>
+  </template>
+
+  <script>
+    // ---------- Store ----------
+    const STORAGE_KEY = "mini_library_v1";
+
+    const store = {
+      read() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } },
+      write(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); },
+      all() { return this.read(); },
+      upsert(book) {
+        const list = this.read();
+        const idx = list.findIndex(b => b.id === book.id);
+        if (idx >= 0) list[idx] = book; else list.unshift(book);
+        this.write(list);
+      },
+      remove(id) { this.write(this.read().filter(b => b.id !== id)); }
+    };
+
+    // ---------- UI Helpers ----------
+    const $ = sel => document.querySelector(sel);
+    const sheet = $("#sheet"), backdrop = $("#backdrop"), bookForm = $("#bookForm");
+    const addBookBtn = $("#addBookBtn"), closeSheetBtn = $("#closeSheetBtn");
+    const cancelBtn = $("#cancelBtn"), deleteBookBtn = $("#deleteBookBtn");
+    const addNoteBtn = $("#addNoteBtn"), notesContainer = $("#notesContainer");
+    const bookList = $("#bookList"), emptyState = $("#emptyState");
+
+    const fields = {
+      id: $("#bookId"), title: $("#title"), author: $("#author"),
+      pubDate: $("#pubDate"), pages: $("#pages"),
+      startDate: $("#startDate"), endDate: $("#endDate"),
+    };
+
+    function openSheet(mode = "add", book = null) {
+      sheet.setAttribute("aria-hidden", "false");
+      backdrop.setAttribute("aria-hidden", "false");
+      document.body.classList.add("noscroll");
+      document.getElementById("sheetTitle").textContent = mode === "edit" ? "Modifier le livre" : "Ajouter un livre";
+      deleteBookBtn.hidden = mode !== "edit";
+      bookForm.dataset.mode = mode;
+      renderForm(book);
+      setTimeout(() => sheet.classList.add("open"), 10);
+    }
+    function closeSheet() {
+      sheet.classList.remove("open");
+      backdrop.setAttribute("aria-hidden", "true");
+      sheet.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("noscroll");
+      bookForm.reset();
+      notesContainer.innerHTML = "";
+    }
+    function renderForm(book) {
+      const b = book || { id: "", title: "", author: "", pubDate: "", pages: "", startDate: "", endDate: "", notes: [] };
+      fields.id.value = b.id || "";
+      fields.title.value = b.title || "";
+      fields.author.value = b.author || "";
+      fields.pubDate.value = b.pubDate || "";
+      fields.pages.value = b.pages ?? "";
+      fields.startDate.value = b.startDate || "";
+      fields.endDate.value = b.endDate || "";
+      notesContainer.innerHTML = "";
+      (b.notes || []).forEach(addNoteRow);
+      if ((b.notes || []).length === 0) addNoteRow();
+    }
+    function addNoteRow(note = { page: "", type: "annotation", text: "" }) {
+      const tpl = document.getElementById("noteRowTpl").content.cloneNode(true);
+      tpl.querySelector(".note-page").value = note.page ?? "";
+      tpl.querySelector(".note-type").value = note.type ?? "annotation";
+      tpl.querySelector(".note-text").value = note.text ?? "";
+      const row = tpl.querySelector(".note-row");
+      row.querySelector(".remove-note").addEventListener("click", () => row.remove());
+      notesContainer.appendChild(tpl);
+    }
+    function collectFormData() {
+      if (!fields.title.value.trim()) { fields.title.focus(); fields.title.setAttribute("aria-invalid","true"); return { error: "Le titre est obligatoire." }; }
+      fields.title.removeAttribute("aria-invalid");
+      const id = fields.id.value || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      const notes = Array.from(notesContainer.querySelectorAll(".note-row")).map(row => {
+        const page = row.querySelector(".note-page").value.trim();
+        const type = row.querySelector(".note-type").value;
+        const text = row.querySelector(".note-text").value.trim();
+        if (!page && !text) return null;
+        return { page: page ? Number(page) : null, type, text };
+      }).filter(Boolean);
+      return {
+        book: {
+          id,
+          title: fields.title.value.trim(),
+          author: fields.author.value.trim(),
+          pubDate: fields.pubDate.value || "",
+          pages: fields.pages.value ? Number(fields.pages.value) : null,
+          startDate: fields.startDate.value || "",
+          endDate: fields.endDate.value || "",
+          notes
+        }
+      };
+    }
+    function renderList() {
+      const data = store.all();
+      bookList.innerHTML = "";
+      if (data.length === 0) { emptyState.style.display = "block"; return; }
+      emptyState.style.display = "none";
+      const tpl = document.getElementById("bookItemTpl").content;
+      data.forEach(b => {
+        const li = tpl.cloneNode(true);
+        li.querySelector(".book-title").textContent = b.title || "Sans titre";
+        li.querySelector(".author").textContent = b.author ? `par ${b.author}` : "Auteur inconnu";
+        const details = [];
+        if (b.pages) details.push(`${b.pages} pages`);
+        if (b.pubDate) details.push(`paru le ${fmtDate(b.pubDate)}`);
+        li.querySelector(".details").textContent = details.join(" • ");
+        const chipRow = li.querySelector(".dates");
+        if (b.startDate) chipRow.appendChild(makeChip(`Début : ${fmtDate(b.startDate)}`));
+        if (b.endDate) chipRow.appendChild(makeChip(`Fin : ${fmtDate(b.endDate)}`));
+        li.querySelector(".count").textContent = String((b.notes || []).length);
+        const listEl = li.querySelector(".note-list");
+        (b.notes || []).forEach(n => {
+          const item = document.createElement("li");
+          const page = (n.page && Number.isFinite(n.page)) ? `p.${n.page} — ` : "";
+          const type = n.type ? `[${n.type}] ` : "";
+          item.textContent = `${page}${type}${n.text}`;
+          listEl.appendChild(item);
+        });
+        li.querySelector(".edit-btn").addEventListener("click", () => openSheet("edit", b));
+        bookList.appendChild(li);
+      });
+    }
+    function makeChip(text){ const s=document.createElement("span"); s.className="chip"; s.textContent=text; return s; }
+    function fmtDate(v){ try{ const d=new Date(v+"T00:00:00"); return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"});}catch{ return v; } }
+
+    // Events
+    document.getElementById("addBookBtn").addEventListener("click", () => openSheet("add"));
+    document.getElementById("closeSheetBtn").addEventListener("click", closeSheet);
+    document.getElementById("backdrop").addEventListener("click", closeSheet);
+    document.getElementById("cancelBtn").addEventListener("click", closeSheet);
+    document.getElementById("addNoteBtn").addEventListener("click", () => addNoteRow());
+    document.getElementById("deleteBookBtn").addEventListener("click", () => {
+      const id = document.getElementById("bookId").value;
+      if (!id) return;
+      if (confirm("Supprimer ce livre ?")) { store.remove(id); closeSheet(); renderList(); }
+    });
+    document.getElementById("bookForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const res = collectFormData();
+      if (res.error) { alert(res.error); return; }
+      store.upsert(res.book); closeSheet(); renderList();
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && sheet.classList.contains("open")) closeSheet(); });
+    renderList();
+
+    // --------- Enregistrement du Service Worker (PWA) ---------
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>
