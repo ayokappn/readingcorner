@@ -4,14 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Digital Library</title>
+
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
   <link rel="stylesheet" href="styles.css"/>
+
+  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="theme-color" content="#F4F4F4">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-512.png">
 </head>
 <body>
-  <!-- Page d'accueil -->
+  <!-- ========== PAGE ACCUEIL ========== -->
   <div id="page-home" class="page active">
     <header class="top-bar">
       <h1>Digital Library</h1>
@@ -22,7 +28,7 @@
     </header>
 
     <div class="list-controls">
-      <input type="text" id="search-book" placeholder="Rechercher...">
+      <input type="text" id="search-book" class="glass-input" placeholder="Rechercher...">
       <select id="sort-books">
         <option value="title">Titre</option>
         <option value="author">Auteur</option>
@@ -30,71 +36,144 @@
     </div>
 
     <ul id="book-list" class="book-list"></ul>
-
-    <button id="btn-add-book" class="btn-float">+</button>
   </div>
 
-  <!-- Page livre -->
+  <!-- ========== PAGE LIVRE ========== -->
   <div id="page-book" class="page">
-   <header class="book-page-header">
-  <button id="btn-back" class="btn-outline">← Retour</button>
-  <h1 id="book-title"></h1>
-  <p id="book-author"></p>
-  <div class="header-actions">
-    <button id="btn-edit-book" class="btn-outline">Modifier</button>
-    <button id="btn-delete-book" class="btn-outline">Supprimer</button>
-    <button id="btn-export-pdf" class="btn-outline">Export PDF</button>
-  </div>
-</header>
+    <header class="book-page-header">
+      <button id="btn-back" class="btn-outline">← Retour</button>
+      <h1 id="book-title"></h1>
+      <p id="book-author"></p>
+      <div class="header-actions">
+        <button id="btn-edit-book" class="btn-outline">Modifier</button>
+        <button id="btn-delete-book" class="btn-outline">Supprimer</button>
+        <button id="btn-export-pdf" class="btn-outline">Export PDF</button>
+      </div>
+    </header>
 
+    <!-- Progress bar élégante -->
+    <div class="progress-wrap">
+      <div class="progress-outer glass">
+        <div class="progress-track" id="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+          <div class="progress-marks" id="progress-marks"></div>
+        </div>
+      </div>
+      <div class="progress-scale">
+        <span id="progress-start">0</span>
+        <span id="progress-end">—</span>
+      </div>
+    </div>
+
+    <!-- Stats cliquables -->
+    <div class="stats-panel" id="stats-panel">
+      <button class="stat-card glass" id="stat-annotations" type="button" aria-pressed="false">
+        <div class="stat-number" id="count-annotations">0</div>
+        <div class="stat-label">ANNOTATIONS</div>
+      </button>
+      <button class="stat-card glass" id="stat-questions" type="button" aria-pressed="false">
+        <div class="stat-number" id="count-questions">0</div>
+        <div class="stat-label">QUESTIONS</div>
+      </button>
+    </div>
+
+    <!-- Filtres / Ajout -->
     <div class="annotations-controls">
       <select id="filter-annotations">
         <option value="all">Tous types</option>
         <option value="citation">Citation</option>
         <option value="commentaire">Commentaire</option>
-        <option value="question">Question</option>
         <option value="bookmark">Bookmark</option>
+        <option value="question">Question</option>
       </select>
       <button id="btn-add-annotation" class="btn-outline">+ Annotation</button>
     </div>
 
-    <ul id="annotation-list" class="annotation-list"></ul>
+    <!-- Liste des annotations (cartes superposées) -->
+    <ul id="annotation-list" class="annotation-list stacked"></ul>
   </div>
 
-  <!-- Modale livre -->
+  <!-- ========== MODALE : LIVRE ========== -->
   <div id="modal-book" class="modal">
-    <div class="modal-content">
+    <div class="modal-content glass">
       <h3 id="modal-book-title">Ajouter un livre</h3>
       <input type="text" id="input-book-title" placeholder="Titre" required>
       <input type="text" id="input-book-author" placeholder="Auteur" required>
+      <input type="number" id="input-book-pages" placeholder="Nombre de pages (optionnel)">
       <div class="modal-actions">
-      <button id="cancel-book" class="btn-outline">Annuler</button>
-      <button id="save-book" class="btn-primary">Enregistrer</button>
+        <button id="cancel-book" class="btn-outline">Annuler</button>
+        <button id="save-book" class="btn-primary">Enregistrer</button>
       </div>
     </div>
   </div>
 
-  <!-- Modale annotation -->
+  <!-- ========== MODALE : ANNOTATION ========== -->
   <div id="modal-annotation" class="modal">
-    <div class="modal-content">
+    <div class="modal-content glass">
       <h3 id="modal-annotation-title">Ajouter une annotation</h3>
       <input type="number" id="input-page" placeholder="Page" required>
       <select id="input-type">
         <option value="citation">Citation</option>
         <option value="commentaire">Commentaire</option>
-        <option value="question">Question</option>
         <option value="bookmark">Bookmark</option>
+        <option value="question">Question</option>
       </select>
       <textarea id="input-text" placeholder="Texte"></textarea>
       <div class="modal-actions">
-      <button id="cancel-annotation" class="btn-outline">Annuler</button>
-      <button id="save-annotation" class="btn-primary">Enregistrer</button>
-    </div>
+        <button id="cancel-annotation" class="btn-outline">Annuler</button>
+        <button id="save-annotation" class="btn-primary">Enregistrer</button>
+      </div>
     </div>
   </div>
 
-  <!-- jsPDF pour export PDF -->
+  <!-- ========== FAB EXTENSIBLE ========== -->
+  <div class="fab" id="fab">
+    <button class="fab-main" id="fab-main">+</button>
+    <div class="fab-actions" id="fab-actions">
+      <button class="fab-item" id="fab-add-book"      title="Ajouter un livre">📚</button>
+      <button class="fab-item" id="fab-add-annotation" title="Ajouter une annotation">✍️</button>
+      <button class="fab-item" id="fab-add-question"   title="Ajouter une question">❓</button>
+    </div>
+  </div>
+
+  <!-- Sélecteur de livre pour FAB annotation/question -->
+<div id="fab-book-select" class="modal">
+  <div class="modal-content glass">
+    <h3>Choisir un livre</h3>
+    <select id="fab-book-dropdown"></select>
+    <div class="modal-actions">
+      <button id="fab-book-cancel" class="btn-outline">Annuler</button>
+      <button id="fab-book-continue" class="btn-primary">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Theme picker -->
+<div class="theme-picker">
+  <button id="btn-theme" class="theme-main glass" title="Thème">🎨</button>
+  <div id="theme-sheet" class="theme-sheet glass">
+    <button class="theme-pill" data-theme="rose"    style="--sw1:#f6d3f1;--sw2:#fbe7f1" title="Rose"></button>
+    <button class="theme-pill" data-theme="rouge"   style="--sw1:#ff9a9e;--sw2:#fecfef" title="Rouge"></button>
+    <button class="theme-pill" data-theme="bleu"    style="--sw1:#a1c4fd;--sw2:#c2e9fb" title="Bleu"></button>
+    <button class="theme-pill" data-theme="vert"    style="--sw1:#d4fc79;--sw2:#96e6a1" title="Vert"></button>
+    <button class="theme-pill" data-theme="violet"  style="--sw1:#d3cce3;--sw2:#e9e4f0" title="Violet"></button>
+  </div>
+</div>
+
+
+
+  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="script.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("sw.js")
+        .then(() => console.log("Service Worker enregistré"))
+        .catch(err => console.error("Erreur SW:", err));
+    }
+  </script>
 </body>
 </html>
