@@ -39,17 +39,18 @@ function openBook(id) {
   showPage("page-book");
 }
 
+// Rendu annotations avec édition au clic
 function renderAnnotations() {
   const filter = document.getElementById("filter-annotations").value;
   const book = library.find(b => b.id === currentBookId);
   let notes = [...book.annotations];
   if (filter !== "all") notes = notes.filter(n => n.type === filter);
   notes.sort((a,b) => a.page - b.page);
-  
+
   const list = document.getElementById("annotation-list");
   list.innerHTML = "";
 
-  notes.forEach(n => {
+  notes.forEach((n) => {
     const li = document.createElement("li");
 
     const typeEl = document.createElement("div");
@@ -68,42 +69,94 @@ function renderAnnotations() {
     li.appendChild(textEl);
     li.appendChild(pageEl);
 
+    // Edition au clic
+    li.addEventListener("click", () => {
+      document.getElementById("modal-annotation-title").textContent = "Modifier annotation";
+      document.getElementById("input-page").value = n.page;
+      document.getElementById("input-type").value = n.type;
+      document.getElementById("input-text").value = n.text;
+      document.getElementById("modal-annotation").classList.add("active");
+
+      document.getElementById("save-annotation").onclick = () => {
+        n.page = parseInt(document.getElementById("input-page").value, 10);
+        n.type = document.getElementById("input-type").value;
+        n.text = document.getElementById("input-text").value.trim();
+        saveLibrary();
+        renderAnnotations();
+        document.getElementById("modal-annotation").classList.remove("active");
+      };
+    });
+
     list.appendChild(li);
   });
 }
 
-
-// Add livre
+// Ajouter livre
 document.getElementById("btn-add-book").onclick = () => {
   document.getElementById("modal-book-title").textContent = "Ajouter un livre";
   document.getElementById("input-book-title").value = "";
   document.getElementById("input-book-author").value = "";
   document.getElementById("modal-book").classList.add("active");
-};
-document.getElementById("save-book").onclick = () => {
-  const title = document.getElementById("input-book-title").value.trim();
-  const author = document.getElementById("input-book-author").value.trim();
-  if (!title || !author) return;
-  library.push({id: Date.now(), title, author, annotations: []});
-  saveLibrary();
-  renderBooks();
-  document.getElementById("modal-book").classList.remove("active");
+
+  document.getElementById("save-book").onclick = () => {
+    const title = document.getElementById("input-book-title").value.trim();
+    const author = document.getElementById("input-book-author").value.trim();
+    if (!title || !author) return;
+    library.push({id: Date.now(), title, author, annotations: []});
+    saveLibrary();
+    renderBooks();
+    document.getElementById("modal-book").classList.remove("active");
+  };
 };
 
-// Add annotation
+// Ajouter annotation
 document.getElementById("btn-add-annotation").onclick = () => {
+  document.getElementById("modal-annotation-title").textContent = "Ajouter une annotation";
+  document.getElementById("input-page").value = "";
+  document.getElementById("input-type").value = "citation";
+  document.getElementById("input-text").value = "";
   document.getElementById("modal-annotation").classList.add("active");
+
+  document.getElementById("save-annotation").onclick = () => {
+    const page = parseInt(document.getElementById("input-page").value, 10);
+    const type = document.getElementById("input-type").value;
+    const text = document.getElementById("input-text").value.trim();
+    if (!page || !text) return;
+    const book = library.find(b => b.id === currentBookId);
+    book.annotations.push({page, type, text});
+    saveLibrary();
+    renderAnnotations();
+    document.getElementById("modal-annotation").classList.remove("active");
+  };
 };
-document.getElementById("save-annotation").onclick = () => {
-  const page = parseInt(document.getElementById("input-page").value, 10);
-  const type = document.getElementById("input-type").value;
-  const text = document.getElementById("input-text").value.trim();
-  if (!page || !text) return;
+
+// Modifier livre
+document.getElementById("btn-edit-book").onclick = () => {
   const book = library.find(b => b.id === currentBookId);
-  book.annotations.push({page, type, text});
-  saveLibrary();
-  renderAnnotations();
-  document.getElementById("modal-annotation").classList.remove("active");
+  document.getElementById("modal-book-title").textContent = "Modifier le livre";
+  document.getElementById("input-book-title").value = book.title;
+  document.getElementById("input-book-author").value = book.author;
+  document.getElementById("modal-book").classList.add("active");
+
+  document.getElementById("save-book").onclick = () => {
+    book.title = document.getElementById("input-book-title").value.trim();
+    book.author = document.getElementById("input-book-author").value.trim();
+    saveLibrary();
+    renderBooks();
+    document.getElementById("book-title").textContent = book.title;
+    document.getElementById("book-author").textContent = book.author;
+    document.getElementById("modal-book").classList.remove("active");
+  };
+};
+
+// Supprimer livre
+document.getElementById("btn-delete-book").onclick = () => {
+  if (confirm("Supprimer ce livre ?")) {
+    library = library.filter(b => b.id !== currentBookId);
+    saveLibrary();
+    renderBooks();
+    showPage("page-home");
+  }
 };
 
 // Export JSON
@@ -157,9 +210,24 @@ document.getElementById("btn-export-pdf").onclick = () => {
   doc.save(`${book.title}-annotations.pdf`);
 };
 
+// Boutons annuler pour modales
+document.getElementById("cancel-book").onclick = () => {
+  document.getElementById("modal-book").classList.remove("active");
+};
+document.getElementById("cancel-annotation").onclick = () => {
+  document.getElementById("modal-annotation").classList.remove("active");
+};
+
+// Fermer modales en cliquant à l'extérieur
+document.querySelectorAll(".modal").forEach(modal => {
+  modal.addEventListener("click", e => {
+    if (e.target === modal) modal.classList.remove("active");
+  });
+});
+
 document.getElementById("btn-back").onclick = () => showPage("page-home");
 
-// Filters & search
+// Filtres & recherche
 document.getElementById("search-book").oninput = renderBooks;
 document.getElementById("sort-books").onchange = renderBooks;
 document.getElementById("filter-annotations").onchange = renderAnnotations;

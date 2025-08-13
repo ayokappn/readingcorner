@@ -367,3 +367,20 @@ body {
   flex-wrap: wrap;
   margin-top: 0.5rem;
 }
+
+.btn-float {
+  position: fixed;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  background: #E0E0E0;
+  color: #000;
+  font-size: 2rem;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
