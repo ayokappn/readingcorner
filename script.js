@@ -278,8 +278,11 @@ function renderProgressBar(){
 
   const start = document.getElementById("progress-start");
   const end   = document.getElementById("progress-end");
-  if(start) start.textContent = "1";
-  if(end)   end.textContent   = String(totalPages);
+  if (start){
+  start.textContent = "";         // pas de "1"
+  start.style.visibility = "hidden";
+}
+if (end) end.textContent = String(totalPages);
 }
 
 
@@ -495,12 +498,27 @@ if (btnTheme && themeSheet) {
 
 /* ---------- Import / Export ---------- */
 // Export JSON
-byId("btn-export-json")?.addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(library)], {type: "application/json"});
+// Export JSON (amélioré iOS : Web Share si dispo)
+byId("btn-export-json")?.addEventListener("click", async () => {
+  const json = JSON.stringify(library);
+  try {
+    const file = new File([json], "library.json", { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Digital Library", text: "Export JSON" });
+      return;
+    }
+  } catch(e){ /* silencieux, on passe au fallback */ }
+
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = "library.json";
+  a.rel = "noopener";
   a.click();
+  URL.revokeObjectURL(url);
+
+  alert('Sur iPhone, le fichier est disponible dans l’app "Fichiers" → Téléchargements.');
 });
 
 // Import JSON
@@ -565,6 +583,29 @@ function escapeHTML(str) {
     "&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"
   }[c]));
 }
+
+// Auto-grow pour <textarea class="auto-grow">
+function autosize(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function enableAutosize(selector){
+  document.addEventListener('input', e=>{
+    if(e.target.matches(selector)) autosize(e.target);
+  });
+  document.querySelectorAll(selector).forEach(autosize);
+}
+
+/* Hauteur viewport fiable sur mobile (iOS) */
+function setVH(){
+  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+}
+window.addEventListener('resize', setVH);
+window.addEventListener('orientationchange', setVH);
+setVH();
+
+/* Auto-grow pour le textarea d'annotation */
+enableAutosize('#input-text');
 
 /* ---------- Init ---------- */
 renderBooks();
