@@ -1,253 +1,91 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Digital Library</title>
-<link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Library</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
+  <!-- Page d'accueil -->
+  <div id="page-home" class="page active">
+    <header class="top-bar">
+      <h1>Digital Library</h1>
+      <div class="header-actions">
+        <button id="btn-import" class="btn-outline">Importer</button>
+        <button id="btn-export-json" class="btn-outline">Exporter</button>
+      </div>
+    </header>
 
-<header class="app-bar">
-  <h1>Digital Library</h1>
-  <div class="top-controls">
-    <button id="exportBtn" class="btn small">Exporter</button>
-    <input id="importFile" type="file" accept="application/json" style="display:none" />
-    <label for="importFile" id="importBtn" class="btn small">Importer</label>
-    <select id="sortSelect" class="btn small">
-      <option value="title">Titre</option>
-      <option value="author">Auteur</option>
-    </select>
-    <button id="addBookBtn" class="icon-btn" title="Ajouter un livre">+</button>
+    <div class="list-controls">
+      <input type="text" id="search-book" placeholder="Rechercher...">
+      <select id="sort-books">
+        <option value="title">Titre</option>
+        <option value="author">Auteur</option>
+      </select>
+    </div>
+
+    <ul id="book-list" class="book-list"></ul>
+
+    <button id="btn-add-book" class="btn-float">+</button>
+  </div>
+
+  <!-- Page livre -->
+  <div id="page-book" class="page">
+   <header class="book-page-header">
+  <button id="btn-back" class="btn-outline">← Retour</button>
+  <h1 id="book-title"></h1>
+  <p id="book-author"></p>
+  <div class="header-actions">
+    <button id="btn-edit-book" class="btn-outline">Modifier</button>
+    <button id="btn-delete-book" class="btn-outline">Supprimer</button>
+    <button id="btn-export-pdf" class="btn-outline">Export PDF</button>
   </div>
 </header>
 
-<main>
-  <ul id="bookList" class="book-list"></ul>
-  <div id="emptyState" class="empty-state">Aucun livre pour l'instant.</div>
-</main>
-
-<template id="bookItemTpl">
-  <li class="book-item">
-    <div class="book-header">
-      <div class="book-title"></div>
-      <div class="book-author"></div>
+    <div class="annotations-controls">
+      <select id="filter-annotations">
+        <option value="all">Tous types</option>
+        <option value="citation">Citation</option>
+        <option value="commentaire">Commentaire</option>
+        <option value="question">Question</option>
+        <option value="bookmark">Bookmark</option>
+      </select>
+      <button id="btn-add-annotation" class="btn-outline">+ Annotation</button>
     </div>
-    <div class="book-details">
-      <div class="book-meta"></div>
-      <ul class="note-list"></ul>
-    </div>
-  </li>
-</template>
 
-<!-- Formulaire -->
-<div id="sheet" class="sheet" aria-hidden="true">
-  <div class="sheet__header">
-    <h2>Ajouter / Modifier un livre</h2>
-    <button id="closeSheetBtn" class="icon-btn">✖</button>
+    <ul id="annotation-list" class="annotation-list"></ul>
   </div>
-  <form id="bookForm">
-    <div class="field"><label for="title">Titre</label><input id="title" type="text" required /></div>
-    <div class="field"><label for="author">Auteur</label><input id="author" type="text" /></div>
-    <div class="field"><label for="pubDate">Date de parution</label><input id="pubDate" type="date" /></div>
-    <div class="field"><label for="pages">Nombre de pages</label><input id="pages" type="number" min="1" /></div>
-    <div class="field"><label for="startDate">Début de lecture</label><input id="startDate" type="date" /></div>
-    <div class="field"><label for="endDate">Fin de lecture</label><input id="endDate" type="date" /></div>
 
-    <div class="notes-container">
-      <h3>Annotations</h3>
-      <div id="notesList"></div>
-      <button type="button" id="addNoteBtn" class="btn small">+ Ajouter une annotation</button>
+  <!-- Modale livre -->
+  <div id="modal-book" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-book-title">Ajouter un livre</h3>
+      <input type="text" id="input-book-title" placeholder="Titre" required>
+      <input type="text" id="input-book-author" placeholder="Auteur" required>
+      <button id="save-book" class="btn-primary">Enregistrer</button>
     </div>
+  </div>
 
-    <div class="actions">
-      <button type="button" id="cancelBtn" class="btn">Annuler</button>
-      <div class="spacer"></div>
-      <button type="submit" class="btn primary">Valider</button>
+  <!-- Modale annotation -->
+  <div id="modal-annotation" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-annotation-title">Ajouter une annotation</h3>
+      <input type="number" id="input-page" placeholder="Page" required>
+      <select id="input-type">
+        <option value="citation">Citation</option>
+        <option value="commentaire">Commentaire</option>
+        <option value="question">Question</option>
+        <option value="bookmark">Bookmark</option>
+      </select>
+      <textarea id="input-text" placeholder="Texte"></textarea>
+      <button id="save-annotation" class="btn-primary">Enregistrer</button>
     </div>
-  </form>
-</div>
-<div id="backdrop" class="backdrop" aria-hidden="true"></div>
+  </div>
 
-<script>
-const STORAGE_KEY = "mini_library_data_v2";
-const store = {
-  all: () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"),
-  save: (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data)),
-  upsert: (book) => {
-    const data = store.all();
-    const idx = data.findIndex(b => b.id === book.id);
-    if (idx > -1) data[idx] = book; else data.push(book);
-    store.save(data);
-  },
-  write: (data) => store.save(data)
-};
-
-const sheet = document.getElementById("sheet");
-const backdrop = document.getElementById("backdrop");
-const closeSheetBtn = document.getElementById("closeSheetBtn");
-const cancelBtn = document.getElementById("cancelBtn");
-const addBookBtn = document.getElementById("addBookBtn");
-const bookForm = document.getElementById("bookForm");
-const bookList = document.getElementById("bookList");
-const emptyState = document.getElementById("emptyState");
-const exportBtn = document.getElementById("exportBtn");
-const importFile = document.getElementById("importFile");
-const sortSelect = document.getElementById("sortSelect");
-const addNoteBtn = document.getElementById("addNoteBtn");
-const notesList = document.getElementById("notesList");
-
-let editingId = null;
-
-function createNoteRow(note={page:"",type:"annotation",text:""}) {
-  const div = document.createElement("div");
-  div.className = "note-item";
-  div.innerHTML = `
-    <input type="number" placeholder="Page" value="${note.page || ""}" style="width:60px">
-    <select>
-      <option value="annotation" ${note.type==="annotation"?"selected":""}>Annotation</option>
-      <option value="citation" ${note.type==="citation"?"selected":""}>Citation</option>
-      <option value="commentaire" ${note.type==="commentaire"?"selected":""}>Commentaire</option>
-    </select>
-    <input type="text" placeholder="Texte" value="${note.text || ""}">
-    <button type="button" class="btn small remove-note">X</button>
-  `;
-  div.querySelector(".remove-note").addEventListener("click", () => div.remove());
-  notesList.appendChild(div);
-}
-
-function openSheet(mode, book) {
-  sheet.classList.add("open");
-  sheet.removeAttribute("aria-hidden");
-  backdrop.removeAttribute("aria-hidden");
-  document.body.classList.add("noscroll");
-  notesList.innerHTML = "";
-  if (mode === "edit" && book) {
-    editingId = book.id;
-    bookForm.title.value = book.title || "";
-    bookForm.author.value = book.author || "";
-    bookForm.pubDate.value = book.pubDate || "";
-    bookForm.pages.value = book.pages || "";
-    bookForm.startDate.value = book.startDate || "";
-    bookForm.endDate.value = book.endDate || "";
-    (book.notes || []).forEach(createNoteRow);
-  } else {
-    editingId = null;
-    bookForm.reset();
-  }
-}
-
-function closeSheet() {
-  sheet.classList.remove("open");
-  backdrop.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("noscroll");
-  setTimeout(() => {
-    sheet.setAttribute("aria-hidden", "true");
-    bookForm.reset();
-    notesList.innerHTML = "";
-  }, 250);
-}
-
-function renderList() {
-  let data = store.all();
-  const sortBy = sortSelect.value;
-  data.sort((a,b) => (a[sortBy] || "").localeCompare(b[sortBy] || ""));
-  const tpl = document.getElementById("bookItemTpl").content;
-  bookList.innerHTML = "";
-  if (!data.length) {
-    emptyState.style.display = "block";
-    return;
-  }
-  emptyState.style.display = "none";
-  data.forEach(b => {
-    const el = tpl.cloneNode(true);
-    el.querySelector(".book-title").textContent = b.title || "Sans titre";
-    el.querySelector(".book-author").textContent = b.author || "";
-    const meta = [
-      b.pubDate ? `Paru : ${b.pubDate}` : "",
-      b.pages ? `${b.pages} pages` : "",
-      b.startDate ? `Début : ${b.startDate}` : "",
-      b.endDate ? `Fin : ${b.endDate}` : ""
-    ].filter(Boolean).join(" | ");
-    el.querySelector(".book-meta").textContent = meta;
-    const noteList = el.querySelector(".note-list");
-    (b.notes || []).forEach(n => {
-      const li = document.createElement("li");
-      li.textContent = `[${n.page}] (${n.type}) ${n.text}`;
-      noteList.appendChild(li);
-    });
-    const header = el.querySelector(".book-header");
-    const details = el.querySelector(".book-details");
-    header.addEventListener("click", () => details.classList.toggle("open"));
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "✎";
-    editBtn.className = "edit-btn";
-    editBtn.addEventListener("click", e => { e.stopPropagation(); openSheet("edit", b); });
-    header.appendChild(editBtn);
-    bookList.appendChild(el);
-  });
-}
-
-addBookBtn.addEventListener("click", () => openSheet("add"));
-closeSheetBtn.addEventListener("click", closeSheet);
-cancelBtn.addEventListener("click", closeSheet);
-backdrop.addEventListener("click", closeSheet);
-sortSelect.addEventListener("change", renderList);
-addNoteBtn.addEventListener("click", () => createNoteRow());
-
-exportBtn.addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(store.all(), null, 2)], {type: "application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "bibliotheque.json"; a.click();
-  URL.revokeObjectURL(url);
-});
-
-importFile.addEventListener("change", async e => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const json = JSON.parse(text);
-    if (!Array.isArray(json)) throw new Error();
-    const mode = confirm("Importer ? OK = Fusionner, Annuler = Remplacer");
-    if (mode) {
-      const current = store.all();
-      const map = new Map(current.map(b => [b.id, b]));
-      json.forEach(b => map.set(b.id, b));
-      store.write(Array.from(map.values()));
-    } else {
-      store.write(json);
-    }
-    renderList();
-  } catch {
-    alert("Fichier invalide");
-  }
-  importFile.value = "";
-});
-
-bookForm.addEventListener("submit", e => {
-  e.preventDefault();
-  const notes = Array.from(notesList.children).map(div => {
-    const [page, type, text] = div.querySelectorAll("input, select");
-    return { page: page.value, type: type.value, text: text.value };
-  });
-  const book = {
-    id: editingId || Date.now(),
-    title: bookForm.title.value.trim(),
-    author: bookForm.author.value.trim(),
-    pubDate: bookForm.pubDate.value,
-    pages: bookForm.pages.value,
-    startDate: bookForm.startDate.value,
-    endDate: bookForm.endDate.value,
-    notes
-  };
-  store.upsert(book);
-  closeSheet();
-  renderList();
-});
-
-renderList();
-</script>
+  <!-- jsPDF pour export PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

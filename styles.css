@@ -1,328 +1,369 @@
-/* Reset */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-  background: #fff;
-  color: #222;
-  line-height: 1.4;
-  max-width: 480px; /* format téléphone */
-  margin: 0 auto;
+  font-family: 'DM Sans', sans-serif;
+  background: #F8F6F1;
+  color: #2E2E2E;
+  margin: 0;
 }
 
-/* Barre d'application */
-.app-bar {
-  position: sticky;
-  top: 0;
+.page { display: none; padding: 1rem; }
+.page.active { display: block; }
+
+.top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
-.app-bar h1 {
-  font-size: 16px;
-  font-weight: bold;
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
 }
-.btn, .icon-btn, select {
-  background: #fff;
-  border: 1px solid #ccc;
-  padding: 6px 10px;
-  font-size: 13px;
+
+h1, h3 {
+  margin: 0;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #CCC;
+  border-radius: 999px;
+  font-size: 1rem;
+}
+
+textarea {
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn-outline {
+  background: none;
+  border: 1px solid #2E2E2E;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
   cursor: pointer;
 }
-.icon-btn {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-}
 
-/* Liste des livres */
-.book-list {
-  list-style: none;
-  border-top: 1px solid #ddd;
-}
-.book-item {
-  border-bottom: 1px solid #ddd;
-}
-.book-header {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  padding: 10px 12px;
+.btn-primary {
+  background: #2E2E2E;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem;
   cursor: pointer;
 }
-.book-title {
-  font-weight: bold;
-  font-size: 14px;
-}
-.book-author {
-  font-size: 14px;
-  color: #555;
-}
 
-/* Bloc des annotations */
-.book-details {
-  display: none;
-  padding: 8px 12px;
-  font-size: 13px;
-  background: #f9f9f9;
-  color: #333;
-}
-.book-details.open {
-  display: block;
-}
-
-/* Liste d'annotations */
-.note-list {
-  padding-left: 14px;
-  margin-top: 6px;
-}
-.note-list li {
-  margin-bottom: 4px;
-  font-size: 13px;
-}
-
-.backdrop { opacity: 0; pointer-events: none; transition: opacity .2s; }
-.sheet.open ~ .backdrop { opacity: 1; pointer-events: auto; }
-
-/* --- Patch minimal, sans impact sur le reste du site --- */
-
-/* Ferme la fenêtre par défaut (n'affecte que l'affichage) */
-.sheet { display: none !important; }
-
-/* Ouvre la fenêtre quand .open est présent */
-.sheet.open { display: block !important; }
-
-/* Backdrop caché par défaut */
-.backdrop { display: none !important; }
-
-/* Backdrop visible seulement quand la sheet est ouverte */
-.sheet.open ~ .backdrop { display: block !important; }
-
-.book-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto; /* titre / auteur / bouton */
-  align-items: center;
-  gap: 8px;
-}
-
-.book-title {
-  font-weight: bold;
-}
-
-.book-author {
-  text-align: right;
-  font-weight: normal;
-  color: #555;
-padding-right: 8px; /* ← espace entre auteur et bouton */
-}
-
-.edit-btn {
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  background: #eee;
+.btn-float {
+  position: fixed;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  background: #E0E0E0;
+  color: #000;
+  font-size: 2rem;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
   border: none;
   cursor: pointer;
 }
 
-.edit-btn:hover {
-  background: #ddd;
+/* Liste livres */
+.book-list {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
 }
 
-/* === Patch UI - alignements & modale centrée === */
-
-/* 1) Header : une seule ligne, aligné proprement */
-.app-bar {
+.book-list li {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  flex-wrap: nowrap;            /* évite le retour à la ligne */
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #CCC;
+  font-weight: 500;
 }
-.app-bar h1 {
-  font-size: 16px;
-  font-weight: 700;
-  white-space: nowrap;          /* ne casse pas le titre */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 4px;
-}
-.top-controls {
+
+/* Annotations */
+.annotations-controls {
   display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+}
+
+.annotation-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 500px;
+}
+
+.annotation-list li {
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  word-break: break-word;
+}
+
+/* couleurs pastel par type */
+.annotation-list li[data-type="citation"] { background: #FFF8E1; }
+.annotation-list li[data-type="commentaire"] { background: #E3F2FD; }
+.annotation-list li[data-type="question"] { background: #FFEBEE; }
+.annotation-list li[data-type="bookmark"] { background: #E8F5E9; }
+
+.annotation-list strong {
+  display: block;
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* Modales */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;            /* évite la 2e ligne */
-}
-.top-controls > * {
-  white-space: nowrap;
 }
 
-/* 2) Limite les débordements dans la liste */
-.book-title,
-.book-author {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.modal.active { display: flex; }
+
+.modal-content {
+  background: #F8F6F1;
+  padding: 1rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-/* 3) “Modifier” reste tout à droite, titre / auteur prennent la place */
+/* Page livre - titre et auteur alignés à gauche */
 .book-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto; /* titre | auteur | bouton */
-  align-items: center;
-  gap: 8px;
+  text-align: left;
+  margin-bottom: 1rem;
+}
+.book-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.book-header p {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
+  margin: 0.2rem 0 0 0;
 }
 
-/* 4) Empêche le scroll de la page quand la modale est ouverte */
-body.noscroll { overflow: hidden; }
-
-/* 5) Backdrop plein écran */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.38);
-  transition: opacity .2s;
-  opacity: 0;
-  pointer-events: none;
-}
-.sheet.open ~ .backdrop {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* 6) Modale centrée et compacte (format téléphone conservé) */
-.sheet {
-  /* déjà contrôlée par .open / display dans ton fichier, on complète ici : */
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%);
-  width: clamp(320px, 92vw, 480px);   /* <= téléphone */
-  max-height: 90vh;
-  overflow: auto;
-  background: #fff;
-  border: 1px solid #e6e6e6;
-  box-shadow: 0 12px 32px rgba(0,0,0,.18);
-  padding: 14px;
-  display: none;                      /* fermé par défaut */
-}
-.sheet.open { display: block; }       /* ouvert */
-
-/* 7) En-tête modale centré visuellement, bouton fermer à droite */
-.sheet__header {
+/* Liste des livres - style pro */
+.book-list li {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;  /* centre le titre */
-  position: sticky;
-  top: 0;
-  background: #fff;
-  padding-bottom: 8px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #eee;
-}
-.sheet__header h2 {
-  font-size: 16px;
-  text-align: center;
-  flex: 1;                  /* prend l’espace pour rester centré */
-}
-.sheet__header .icon-btn {
-  margin-left: auto;        /* “X” collé à droite */
+  padding: 1rem 0; /* plus d'espace */
+  border-bottom: 2px solid #CCC; /* plus épais */
+  max-width: 90%; /* moins long */
+  margin: 0 auto; /* centré */
 }
 
-/* 8) Formulaire : champs full-width, rythme et centrage doux */
-#bookForm {
-  display: grid;
-  gap: 10px;
+.book-list li span:first-child {
+  font-weight: 700;
+  text-transform: uppercase;
 }
-#bookForm .field {
-  display: grid;
-  gap: 4px;
-}
-#bookForm label {
-  font-size: 13px;
-  color: #444;
-}
-#bookForm input,
-#bookForm select {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-.notes-container h3 {
-  font-size: 14px;
-  text-align: center;     /* titre “Annotations” centré */
-  margin-bottom: 4px;
-}
-#notesList .note-item {
-  display: grid;
-  grid-template-columns: 72px 1fr 1.6fr auto;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-#notesList .note-item input[type="number"] { text-align: center; }
-#notesList .note-item input[type="text"],
-#notesList .note-item select {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ccc;
-  font-size: 13px;
+.book-list li span:last-child {
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
 }
 
-/* 9) Actions du formulaire : séparation et centrage visuel */
-.actions {
+/* Ajustement annotation-list pour rester centrée */
+.annotation-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 500px;
+}
+
+/* Liste annotations en cartes verticales centrées */
+.annotation-list {
+  list-style: none;
+  margin: 2rem auto;
+  padding: 0;
+  max-width: 500px;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-.actions .spacer { flex: 1; } /* pousse “Valider” à droite */
-
-/* 10) Petites retouches boutons pour la densité */
-.btn.small, select.btn.small {
-  padding: 4px 8px;
-  font-size: 12px;
-}
-.icon-btn {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
+  flex-direction: column;
+  gap: 1.2rem;
 }
 
-/* Backdrop plus clair et animé */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.15); /* moins sombre */
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none; /* pas cliquable tant que pas ouvert */
+.annotation-list li {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-/* Quand la modale est ouverte */
-.sheet.open ~ .backdrop {
-  opacity: 1;
-  pointer-events: auto; /* rend cliquable pour fermer */
+.annotation-type {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #666;
 }
 
-/* S'assure que la modale est au-dessus et que le fond n'empêche pas le formulaire */
-.backdrop {
-  z-index: 10; /* dessous */
-}
-.sheet {
-  z-index: 20; /* au-dessus du backdrop */
+.annotation-text {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #2E2E2E;
+  word-break: break-word;
 }
 
-/* Le backdrop ne bloque pas les clics sur la modale */
-.backdrop {
-  pointer-events: auto; /* clics sur le backdrop OK pour fermer */
+.annotation-page {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: right;
 }
-.sheet {
-  pointer-events: auto; /* clics dans la modale OK */
+
+/* 1. Changer le fond général */
+body {
+  background: #F4F4F4 !important;
+}
+
+/* 2. Titre & auteur à gauche, sous retour */
+.book-header {
+  text-align: left;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.book-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.book-header p {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
+  margin: 0.2rem 0 0 0;
+}
+
+/* 3. Retirer les ombres des annotations */
+.annotation-list li {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: none !important; /* pas d'ombre */
+  border: 1px solid #DDD; /* ajout d'un contour léger pour garder structure */
+}
+
+.header-top {
+  margin-bottom: 0.5rem;
+}
+
+.book-header {
+  text-align: left;
+  margin-bottom: 1rem;
+}
+
+.book-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.book-header p {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
+  margin: 0.2rem 0 0 0;
+}
+
+.book-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* tout à gauche */
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.book-page-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.book-page-header p {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
+  margin: 0;
+}
+
+.book-page-header .header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.book-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.8rem; /* espace uniforme entre chaque bloc */
+  margin-bottom: 1.5rem;
+}
+
+/* Bouton retour : un peu plus d'air dessous */
+.book-page-header #btn-back {
+  margin-bottom: 0.2rem;
+}
+
+/* Titre & auteur : espace resserré entre eux, mais plus d'air dessous */
+.book-page-header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.book-page-header p {
+  font-size: 1rem;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #555;
+  margin: 0;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+}
+
+/* Actions : petit espacement vertical et entre boutons */
+.book-page-header .header-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
